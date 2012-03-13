@@ -5,18 +5,18 @@
   Include: 
   - @all_ratings.each do |rating|
     = rating
-    = check_box_tag "ratings[#{rating}]", "1", @selected_ratings.keys.include?(rating)
+    = check_box_tag "ratings[#{rating}]", "1", session[:ratings].keys.include?(rating)
   = submit_tag 'Refresh', :id => 'ratings_submit'
 %table#movies
   %thead
     %tr
-      - title_params = {:ratings => @selected_ratings, :sort => :title}
+      - title_params = {:ratings => session[:ratings], :sort => :title}
       - if @hilite == 'title'
         %th.hilite= link_to 'Movie Title', movies_path(title_params), :id => 'title_header'
       - else
         %th= link_to 'Movie Title', movies_path(title_params), :id => 'title_header'
       %th Rating
-      - release_date_params = {:ratings => @selected_ratings, :sort => :release_date}
+      - release_date_params = {:ratings => session[:ratings], :sort => :release_date}
       - if @hilite == 'release_date'
         %th.hilite= link_to 'Release Date', movies_path(release_date_params), :id => 'release_date_header'
       - else

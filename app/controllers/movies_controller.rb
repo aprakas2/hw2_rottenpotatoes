@@ -1,6 +1,5 @@
 class MoviesController < ApplicationController
 
-
   def show
     id = params[:id] # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
@@ -8,20 +7,46 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @selected_ratings = {}
+    do_redirect = false
+
     if(params[:ratings])
-      @selected_ratings = params[:ratings]
-      conditions = @selected_ratings.keys.map {|k| "rating = '#{k}'"}.join " OR "
+      session[:ratings] = params[:ratings]
+    elsif(session[:ratings])
+      if(params[:commit])
+        session.delete :ratings
+      else
+        do_redirect
+      end
     end
-    
-    @all_ratings = ['G', 'PG', 'PG-13', 'R', 'NC-17']
-    @movies = Movie.order(params[:sort]).where(conditions)
+
+    if(params[:sort])
+      session[:sort] = params[:sort]
+    else
+      do_redirect = true if session[:sort]
+    end
+
+    doRESTfulRedirect if do_redirect
+
+    @all_ratings = Movie.ratings
+    @movies = Movie.order(session[:sort]).where(ratings_conditions)
     @hilite = params[:sort]
+  end
+
+  def ratings_conditions
+    session[:ratings].keys.map {|rating| "rating = '#{rating}'"}.join ' OR ' if session[:ratings]
+  end
+
+  def doRESTfulRedirect
+    redirect_to getRESTfulLink
+  end
+
+  def getRESTfulLink
+    movies_path(:ratings => session[:ratings], :sort => session[:sort])
   end
 
   def new
     # default: render 'new' template
-    @all_ratings = ['G', 'PG', 'PG-13', 'R', 'NC-17']
+    @all_ratings = Movie.ratings
   end
 
   def create
@@ -32,6 +57,7 @@ class MoviesController < ApplicationController
 
   def edit
     @movie = Movie.find params[:id]
+    @all_ratings = Movie.ratings
   end
 
   def update
